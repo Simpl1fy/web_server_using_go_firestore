@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 
 	firebase "firebase.google.com/go"
@@ -24,29 +25,22 @@ func main() {
 	ctx := context.Background()
 
 	// setting up local firestore emulator
-	emulatorHost := "localhost:4000"
-	fireStoreEndpoint := fmt.Sprintf("http://%s", emulatorHost)
-	/*
-		fmt.Sprintf() returns a string after formatting(similar to Fprintf())
-	*/
 
-	conf := &firebase.Config{
-		ProjectID:     "testing-todos",
-		DatabaseURL:   fireStoreEndpoint,
-		StorageBucket: "",
+	conf := &firebase.Config{ProjectID: "testing-todos-bd80f"}
+	opts := []option.ClientOption{
+		option.WithEndpoint("localhost:8080"),
+		option.WithoutAuthentication(),
 	}
-	app, err := firebase.NewApp(ctx, conf, option.WithoutAuthentication())
+	app, err := firebase.NewApp(ctx, conf, opts...)
 
 	if err != nil {
-		fmt.Println("Error occured while creating a new app:", err)
-		return
+		fmt.Println("Error while creating a new firebase app:", err)
+	}
+	client, err := app.Firestore(ctx)
+	if err != nil {
+		log.Fatalln(err)
 	}
 
-	client, client_err := app.Firestore(ctx)
-	if client_err != nil {
-		fmt.Println("Error while creating a client:", client_err)
-		return
-	}
 	defer client.Close()
 
 	_, _, addErr := client.Collection("users").Add(ctx, map[string]interface{}{
@@ -63,7 +57,7 @@ func main() {
 	fmt.Println("Listening to port 5000")
 	er := http.ListenAndServe(":5000", nil)
 	if er != nil {
-		fmt.Println("Error while listening and serving =", err)
+		fmt.Println("Error while listening and serving =", er)
 		return
 	}
 }
