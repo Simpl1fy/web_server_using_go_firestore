@@ -22,8 +22,20 @@ func main() {
 	fmt.Println("Hello World this is a web server in go")
 
 	ctx := context.Background()
-	sa := option.WithCredentialsFile("testing-todos-bd80f-firebase-adminsdk-2iok6-3c8d3b6952.json")
-	app, err := firebase.NewApp(ctx, nil, sa)
+
+	// setting up local firestore emulator
+	emulatorHost := "localhost:4000"
+	fireStoreEndpoint := fmt.Sprintf("http://%s", emulatorHost)
+	/*
+		fmt.Sprintf() returns a string after formatting(similar to Fprintf())
+	*/
+
+	conf := &firebase.Config{
+		ProjectID:     "testing-todos",
+		DatabaseURL:   fireStoreEndpoint,
+		StorageBucket: "",
+	}
+	app, err := firebase.NewApp(ctx, conf, option.WithoutAuthentication())
 
 	if err != nil {
 		fmt.Println("Error occured while creating a new app:", err)
@@ -37,10 +49,10 @@ func main() {
 	}
 	defer client.Close()
 
-	_, _, addErr := client.Collection("users").Add(ctx, map[string]interface{} {
+	_, _, addErr := client.Collection("users").Add(ctx, map[string]interface{}{
 		"first": "Gourab",
-		"last": "Das",
-		"born": 2004,
+		"last":  "Das",
+		"born":  2004,
 	})
 
 	if addErr != nil {
